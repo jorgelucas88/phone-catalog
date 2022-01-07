@@ -1,3 +1,4 @@
+import { ConfirmProvider } from 'material-ui-confirm';
 import './App.css';
 import PhoneTable from './components/phonetable/phonetable';
 
@@ -5,7 +6,9 @@ function getPhoneTable() {
   return (
     <div className="col-md-12">               
         <section className="components">
-          {<PhoneTable />}
+          {<ConfirmProvider>
+            <PhoneTable />
+          </ConfirmProvider>}
         </section>
     </div>
   );
@@ -38,16 +41,14 @@ function App() {
             <div className="container">
               <h1>Phone catalog</h1>
               <p className="lead text-muted">A phone catalog consuming a rest API</p>
-
+              <p className="lead text-muted"><h2><i>Click on a <b>table line</b> to see more details</i></h2></p>
             </div>
           </section>
 
           <div className="calculator py-5 bg-light">
             <div className="container">
               <div className="row justify-content-center">
-
                 { getPhoneTable() }
-
               </div>
             </div>
           </div>

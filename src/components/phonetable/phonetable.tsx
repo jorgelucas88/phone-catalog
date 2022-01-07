@@ -9,6 +9,9 @@ import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import axios from "axios";
 import FormDialog from "../phoneform/PhoneForm";
+import { useConfirm } from "material-ui-confirm";
+import Loader from "react-loader-spinner";
+import { Button } from "@mui/material";
 
 interface Column {
   id: "name" | "manufacturer" | "color" | "price" | "screen";
@@ -21,24 +24,9 @@ interface Column {
 const columns: readonly Column[] = [
   { id: "name", label: "Name", minWidth: 170 },
   { id: "manufacturer", label: "Manufacturer", minWidth: 100 },
-  {
-    id: "color",
-    label: "Color",
-    minWidth: 170,
-    align: "right",
-  },
-  {
-    id: "price",
-    label: "Price",
-    minWidth: 170,
-    align: "right",
-  },
-  {
-    id: "screen",
-    label: "Screen",
-    minWidth: 170,
-    align: "right",
-  },
+  { id: "color", label: "Color", minWidth: 170, align: "right" },
+  { id: "price", label: "Price", minWidth: 170, align: "right" },
+  { id: "screen", label: "Screen", minWidth: 170, align: "right" },
 ];
 
 interface IPhoneData {
@@ -53,9 +41,11 @@ interface IPhoneData {
   screen: string;
   processor: string;
   ram: string;
+  deletedAt?: Date;
 }
 
 export default function PhoneTable() {
+  const confirm = useConfirm();
   const phones: IPhoneData[] = [];
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -68,11 +58,17 @@ export default function PhoneTable() {
     React.useState(phones);
   const [totalRows, setTotalRows]: [number, (totalRows: number) => void] =
     React.useState<number>(0);
-    
-   const [phonePopupOpen, setPhonePopupOpen] = React.useState(false);
+
+  const [phonePopupOpen, setPhonePopupOpen] = React.useState(false);
+  const [phonePopupData, setPhonePopupData] = React.useState<IPhoneData | null>(
+    null
+  );
+
+  React.useEffect(() => {
+    fetchDataFromBackend(0, 10);
+  }, []);
 
   const handleChangePage = (event: unknown, newPage: number) => {
-    console.log("newPage", newPage);
     fetchDataFromBackend(newPage, rowsPerPage);
     setPage(newPage);
   };
@@ -85,10 +81,6 @@ export default function PhoneTable() {
     setPage(0);
   };
 
-  React.useEffect(() => {
-    fetchDataFromBackend(0, 10);
-  }, []);
-
   const fetchDataFromBackend = (page: number, pageSize: number) => {
     setLoading(true);
     axios
@@ -99,68 +91,164 @@ export default function PhoneTable() {
         setRows(r.data.phones);
         setTotalRows(r.data.total);
         setLoading(false);
-        console.log(totalRows, r.data.phones.length, r.data.total, "<");
       });
   };
 
   const showPhoneDetails = (phone: IPhoneData) => {
-    console.log(phone);
+    setPhonePopupOpen(!phonePopupOpen);
+    setPhonePopupData(phone);
   };
+  const newPhone = () => {
+    setPhonePopupOpen(!phonePopupOpen);
+    setPhonePopupData(null);
+  }
+
+  const handlePhoneDelete = (phoneId: number) => {
+    confirm({ description: "Are you sure you want to delete?" })
+      .then(() => {
+        setLoading(true);
+        setPhonePopupOpen(false);
+        axios.delete("http://localhost:3000/phones/" + phoneId).then((r) => {
+          fetchDataFromBackend(0, rowsPerPage);
+        });
+      })
+      .catch(() => {
+        console.log("catch");
+      });
+  };
+  const handlePhoneUpdate = (phone: IPhoneData) => {
+    confirm({
+      description: "Are you sure you want to update the phone details?",
+    })
+      .then(() => {
+        setLoading(true);
+        setPhonePopupOpen(false);
+        axios
+          .patch("http://localhost:3000/phones", { data: phone })
+          .then((r) => {
+            setLoading(false);
+            confirm({
+              title: "Success",
+              description: "Phone updated",
+              cancellationText: "",
+            }).then(() => {});
+          })
+          .catch((e) => {
+            console.error(e);
+            setLoading(false);
+            fetchDataFromBackend(0, rowsPerPage);
+            confirm({
+              title: "Error",
+              description: "An error occurred. Please try again later",
+              cancellationText: "",
+            }).then(() => {});
+          });
+      })
+      .catch(() => {});
+  };
+  const handlePhoneSave = (phone: IPhoneData) => {
+        setLoading(true);
+        setPhonePopupOpen(false);
+        axios
+          .post("http://localhost:3000/phones", { data: phone })
+          .then((r) => {
+            setLoading(false);
+            fetchDataFromBackend(0, rowsPerPage);
+            confirm({
+              title: "Success",
+              description: "Phone created",
+              cancellationText: "",
+            }).then(() => { 
+            });
+          })
+          .catch((e) => {
+            console.error(e);
+            setLoading(false);
+            confirm({
+              title: "Error",
+              description: "An error occurred. Please try again later",
+              cancellationText: "",
+            }).then(() => {});
+          });
+  }
 
   return (
-    <Paper sx={{ width: "100%", overflow: "hidden" }}>
-      <TableContainer sx={{ maxHeight: 440 }}>
-        <Table stickyHeader aria-label="sticky table">
-          <TableHead>
-            <TableRow>
-              {columns.map((column) => (
-                <TableCell
-                  key={column.id}
-                  align={column.align}
-                  style={{ minWidth: column.minWidth }}
-                >
-                  {column.label}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows
-              //.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((row: IPhoneData) => {
-                return (
-                  <TableRow
-                    hover
-                    role="checkbox"
-                    tabIndex={-1}
-                    key={row.id}
-                    onClick={() => showPhoneDetails(row)}
-                  >
-                    {columns.map((column) => {
-                      const value = row[column.id];
-                      return (
-                        <TableCell key={column.id} align={column.align}>
-                          {column.format && typeof value === "number"
-                            ? column.format(value)
-                            : value}
-                        </TableCell>
-                      );
-                    })}
+    <div>
+      {loading ? (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Loader type="Circles" color="#00BFFF" height={80} width={80} />
+        </div>
+      ) : (
+        <div>
+          <Button variant="outlined" style={{float: "right", "margin": "0 0 5px 0" }} onClick={newPhone}>New</Button>
+          <Paper sx={{ width: "100%", overflow: "hidden" }}>
+            <TableContainer sx={{ maxHeight: 440 }}>
+              <Table stickyHeader aria-label="sticky table">
+                <TableHead>
+                  <TableRow>
+                    {columns.map((column) => (
+                      <TableCell
+                        key={column.id}
+                        align={column.align}
+                        style={{ minWidth: column.minWidth }}
+                      >
+                        {column.label}
+                      </TableCell>
+                    ))}
                   </TableRow>
-                );
-              })}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <TablePagination
-        rowsPerPageOptions={[1, 10, 25, 100]}
-        component="div"
-        count={totalRows}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
-    </Paper>
+                </TableHead>
+                <TableBody>
+                  {rows.map((row: IPhoneData) => {
+                    return (
+                      <TableRow
+                        hover
+                        role="checkbox"
+                        tabIndex={-1}
+                        key={row.id}
+                        onClick={() => showPhoneDetails(row)}
+                      >
+                        {columns.map((column) => {
+                          const value = row[column.id];
+                          return (
+                            <TableCell key={column.id} align={column.align}>
+                              {column.format && typeof value === "number"
+                                ? column.format(value)
+                                : value}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <TablePagination
+              rowsPerPageOptions={[1, 10, 25, 100]}
+              component="div"
+              count={totalRows}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            />
+            <FormDialog
+              open={phonePopupOpen}
+              setOpen={setPhonePopupOpen}
+              phoneDetails={phonePopupData}
+              handlePhoneDelete={handlePhoneDelete}
+              handlePhoneUpdate={handlePhoneUpdate}
+              handlePhoneSave={handlePhoneSave}
+            />
+          </Paper>
+        </div>
+      )}
+    </div>
   );
 }
