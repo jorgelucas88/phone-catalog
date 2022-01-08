@@ -38,6 +38,8 @@ interface IPhoneData {
   color: string;
   price: number;
   image: Buffer;
+  uploadFile?: File;
+  uploadFileName?: string;
   screen: string;
   processor: string;
   ram: string;
@@ -116,7 +118,7 @@ export default function PhoneTable() {
         console.log("catch");
       });
   };
-  const handlePhoneUpdate = (phone: IPhoneData) => {
+  const handlePhoneUpdate = (bodyFormData: FormData) => {
     confirm({
       description: "Are you sure you want to update the phone details?",
     })
@@ -124,7 +126,7 @@ export default function PhoneTable() {
         setLoading(true);
         setPhonePopupOpen(false);
         axios
-          .patch("http://localhost:3000/phones", { data: phone })
+          .patch("http://localhost:3000/phones", bodyFormData)
           .then((r) => {
             setLoading(false);
             confirm({
@@ -146,11 +148,12 @@ export default function PhoneTable() {
       })
       .catch(() => {});
   };
-  const handlePhoneSave = (phone: IPhoneData) => {
+  const handlePhoneSave = (bodyFormData: FormData) => {
         setLoading(true);
         setPhonePopupOpen(false);
+        
         axios
-          .post("http://localhost:3000/phones", { data: phone })
+          .post("http://localhost:3000/phones", bodyFormData)
           .then((r) => {
             setLoading(false);
             fetchDataFromBackend(0, rowsPerPage);
@@ -170,6 +173,34 @@ export default function PhoneTable() {
               cancellationText: "",
             }).then(() => {});
           });
+  }
+  const handleRemoveImage = (phone: IPhoneData) => {
+    confirm({
+        description: "Are you sure you want to delete this phone image?",
+      })
+        .then(() => {
+          axios
+            .delete("http://localhost:3000/phones/image/"+phone.id)
+            .then((r) => {
+              setLoading(false);
+              setPhonePopupOpen(false);
+              fetchDataFromBackend(page, rowsPerPage);
+              confirm({
+                title: "Success",
+                description: "Phone updated - Phone image deleted",
+                cancellationText: "",
+              }).then(() => {});
+            })
+            .catch((e) => {
+              console.error(e);
+              confirm({
+                title: "Error",
+                description: "An error occurred. Please try again later",
+                cancellationText: "",
+              }).then(() => {});
+            });
+        })
+        .catch(() => {});
   }
 
   return (
@@ -245,6 +276,7 @@ export default function PhoneTable() {
               handlePhoneDelete={handlePhoneDelete}
               handlePhoneUpdate={handlePhoneUpdate}
               handlePhoneSave={handlePhoneSave}
+              handleRemoveImage={handleRemoveImage}
             />
           </Paper>
         </div>
