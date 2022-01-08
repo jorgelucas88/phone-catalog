@@ -129,6 +129,7 @@ export default function PhoneTable() {
           .patch("http://localhost:3000/phones", bodyFormData)
           .then((r) => {
             setLoading(false);
+            fetchDataFromBackend(page, rowsPerPage);
             confirm({
               title: "Success",
               description: "Phone updated",
@@ -138,7 +139,6 @@ export default function PhoneTable() {
           .catch((e) => {
             console.error(e);
             setLoading(false);
-            fetchDataFromBackend(0, rowsPerPage);
             confirm({
               title: "Error",
               description: "An error occurred. Please try again later",

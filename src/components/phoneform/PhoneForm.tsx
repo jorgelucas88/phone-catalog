@@ -46,9 +46,11 @@ export default function FormDialog(params: IFormDialogParams) {
     React.useState<string>();
   const [newPhoneDataScreen, setNewPhoneDataScreen] = React.useState<string>();
   const [newPhoneDataRam, setNewPhoneDataRam] = React.useState<string>();
-  const [newPhoneDataImageFile, setNewPhoneDataImageUploadFile] = React.useState<File | null>();
-  const [newPhoneDataImageFileName, setNewPhoneDataImageUploadFileName] = React.useState<string>();
-  
+  const [newPhoneDataImageFile, setNewPhoneDataImageUploadFile] =
+    React.useState<File | null>();
+  const [newPhoneDataImageFileName, setNewPhoneDataImageUploadFileName] =
+    React.useState<string>();
+
   const handleClose = () => {
     params.setOpen(false);
   };
@@ -57,91 +59,79 @@ export default function FormDialog(params: IFormDialogParams) {
     params.handlePhoneDelete(params.phoneDetails!.id);
   };
 
-  const handlePhoneUpdate = () => {
+  const getFormData = (): FormData => {
     const bodyFormData: FormData = new FormData();
     if (newPhoneDataImageFile) {
-        bodyFormData.append("image", newPhoneDataImageFile as Blob, newPhoneDataImageFileName);
+      bodyFormData.append(
+        "image",
+        newPhoneDataImageFile as Blob,
+        newPhoneDataImageFileName
+      );
     }
-    bodyFormData.append("name", newPhoneDataName || "");
-    bodyFormData.append("manufacturer", newPhoneDataName || "");
-    bodyFormData.append("description", newPhoneDataDescription || "");
-    bodyFormData.append("color", newPhoneDataColor || "");
-    bodyFormData.append("price", newPhoneDataPrice?.toString() || "");
-    bodyFormData.append("processor", newPhoneDataProcessor || "");
-    bodyFormData.append("ram", newPhoneDataRam || "");
+    
+    bodyFormData.append("name", newPhoneDataName || params.phoneDetails!.name);
+    bodyFormData.append("manufacturer", newPhoneDataManufacturer || (params.phoneDetails && params.phoneDetails.manufacturer) || "");
+    bodyFormData.append("description", newPhoneDataDescription || (params.phoneDetails && params.phoneDetails.description) || "");
+    bodyFormData.append("color", newPhoneDataColor || (params.phoneDetails && params.phoneDetails.color) || "");
+    bodyFormData.append("price", newPhoneDataPrice?.toString() || (params.phoneDetails && params.phoneDetails.price.toString()) || "");
+    bodyFormData.append("processor", newPhoneDataProcessor || (params.phoneDetails && params.phoneDetails.processor) || "");
+    bodyFormData.append("ram", newPhoneDataRam || (params.phoneDetails && params.phoneDetails.ram) || "");
+    bodyFormData.append("screen", newPhoneDataScreen || (params.phoneDetails && params.phoneDetails.screen) || "");
+    return bodyFormData;
+  };
+  const handlePhoneUpdate = () => {
+    const bodyFormData: FormData = getFormData();
+    bodyFormData.append("id", params.phoneDetails!.id.toString());
     params.handlePhoneUpdate(bodyFormData);
   };
 
   const handlePhoneSave = () => {
-    const bodyFormData: FormData = new FormData();
-    if (newPhoneDataImageFile) {
-        bodyFormData.append("image", newPhoneDataImageFile as Blob, newPhoneDataImageFileName);
-    }
-    bodyFormData.append("name", newPhoneDataName || "");
-    bodyFormData.append("manufacturer", newPhoneDataName || "");
-    bodyFormData.append("description", newPhoneDataDescription || "");
-    bodyFormData.append("color", newPhoneDataColor || "");
-    bodyFormData.append("price", newPhoneDataPrice?.toString() || "");
-    bodyFormData.append("processor", newPhoneDataProcessor || "");
-    bodyFormData.append("ram", newPhoneDataRam || "");
-    
+    const bodyFormData: FormData = getFormData();
     params.handlePhoneSave(bodyFormData);
   };
 
   const handleRemoveImage = () => {
-      params.handleRemoveImage(params.phoneDetails);
-  }
+    params.handleRemoveImage(params.phoneDetails);
+  };
 
-  const setFieldValue = (field: string, value: string | number | Buffer, uploadFile?: File | null) => {
+  const setFieldValue = (
+    field: string,
+    value: string | number | Buffer,
+    uploadFile?: File | null
+  ) => {
     switch (field) {
       case "name":
-        params.phoneDetails
-          ? (params.phoneDetails!.name = value as string)
-          : setNewPhoneDataName(value as string);
+        setNewPhoneDataName(value as string);
         break;
       case "manufacturer":
-        params.phoneDetails
-          ? (params.phoneDetails!.manufacturer = value as string)
-          : setNewPhoneDataManufactorer(value as string);
+        setNewPhoneDataManufactorer(value as string);
         break;
       case "description":
-        params.phoneDetails
-          ? (params.phoneDetails!.description = value as string)
-          : setNewPhoneDataDescription(value as string);
+        setNewPhoneDataDescription(value as string);
         break;
       case "color":
-        params.phoneDetails
-          ? (params.phoneDetails!.color = value as string)
-          : setNewPhoneDataColor(value as string);
+        setNewPhoneDataColor(value as string);
         break;
       case "price":
-        params.phoneDetails
-          ? (params.phoneDetails!.price = value as number)
-          : setNewPhoneDataPrice(value as number);
+        setNewPhoneDataPrice(value as number);
         break;
       case "processor":
-        params.phoneDetails
-          ? (params.phoneDetails!.processor = value as string)
-          : setNewPhoneDataProcessor(value as string);
+        setNewPhoneDataProcessor(value as string);
         break;
       case "screen":
-        params.phoneDetails
-          ? (params.phoneDetails!.screen = value as string)
-          : setNewPhoneDataProcessor(value as string);
+        setNewPhoneDataScreen(value as string);
         break;
       case "ram":
-        params.phoneDetails
-          ? (params.phoneDetails!.ram = value as string)
-          : setNewPhoneDataRam(value as string);
+        setNewPhoneDataRam(value as string);
         break;
       case "image":
         if (uploadFile) {
-            setNewPhoneDataImageUploadFile(uploadFile);
-            setNewPhoneDataImageUploadFileName(uploadFile?.name);
+          setNewPhoneDataImageUploadFile(uploadFile);
+          setNewPhoneDataImageUploadFileName(uploadFile?.name);
         } else if (params.phoneDetails) {
-            params.phoneDetails!.image = value as Buffer;
+          params.phoneDetails!.image = value as Buffer;
         }
-        
+
         break;
       default:
         break;
@@ -156,18 +146,24 @@ export default function FormDialog(params: IFormDialogParams) {
           <DialogContentText></DialogContentText>
           {params.phoneDetails?.image ? (
             <div>
-            <img
-              // https://stackoverflow.com/questions/57699628/how-to-convert-a-file-buffer-to-img-tag-src
-              src={`data:${
-                params.phoneDetails?.image
-              };base64,${params.phoneDetails?.image?.toString("base64")}`}
-              height="160px"
-              width="212px"
-              alt="image"
-              style={{ alignSelf: "center" }}
-            /> 
-            
-            <Button variant="outlined" style={{"margin": "0px 0px 0px 10px" }} onClick={handleRemoveImage}>Remove image</Button>
+              <img
+                // https://stackoverflow.com/questions/57699628/how-to-convert-a-file-buffer-to-img-tag-src
+                src={`data:${
+                  params.phoneDetails?.image
+                };base64,${params.phoneDetails?.image?.toString("base64")}`}
+                height="160px"
+                width="212px"
+                alt="image"
+                style={{ alignSelf: "center" }}
+              />
+
+              <Button
+                variant="outlined"
+                style={{ margin: "0px 0px 0px 10px" }}
+                onClick={handleRemoveImage}
+              >
+                Remove image
+              </Button>
             </div>
           ) : (
             <div>
@@ -177,7 +173,11 @@ export default function FormDialog(params: IFormDialogParams) {
                 id="image"
                 type="file"
                 onChange={(event) =>
-                  setFieldValue(event.target.id, "", event.target.files && event.target.files[0])
+                  setFieldValue(
+                    event.target.id,
+                    "",
+                    event.target.files && event.target.files[0]
+                  )
                 }
               />
             </div>
