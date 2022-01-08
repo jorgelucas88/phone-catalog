@@ -12,6 +12,7 @@ import FormDialog from "../phoneform/PhoneForm";
 import { useConfirm } from "material-ui-confirm";
 import Loader from "react-loader-spinner";
 import { Button } from "@mui/material";
+import TextField from "@mui/material/TextField";
 
 const apiHost: string = process.env.REACT_APP_API || "http://localhost:3000";
 axios.defaults.baseURL = apiHost;
@@ -68,6 +69,10 @@ export default function PhoneTable() {
   const [phonePopupData, setPhonePopupData] = React.useState<IPhoneData | null>(
     null
   );
+  const [searchTerm, setSearchTerm] = React.useState<string | null>(
+    null
+  );
+  
 
   React.useEffect(() => {
     fetchDataFromBackend(0, 10);
@@ -89,7 +94,7 @@ export default function PhoneTable() {
   const fetchDataFromBackend = (page: number, pageSize: number) => {
     setLoading(true);
     axios
-      .get("/phones", {
+      .get('/phones/'+ (searchTerm ? "?searchTerm=" + searchTerm : ""), {
         params: { page: page, pageSize: pageSize },
       })
       .then((r) => {
@@ -205,6 +210,12 @@ export default function PhoneTable() {
         })
         .catch(() => {});
   }
+  const handlePhoneSearchTerm = (searchTerm: string): void => {
+      setSearchTerm(searchTerm);
+  }
+  React.useEffect(() => {
+     fetchDataFromBackend(0, rowsPerPage);
+  }, [searchTerm]);
 
   return (
     <div>
@@ -220,7 +231,14 @@ export default function PhoneTable() {
         </div>
       ) : (
         <div>
-          <Button variant="outlined" style={{float: "right", "margin": "0 0 5px 0" }} onClick={newPhone}>New</Button>
+          {/* search */}
+          <TextField autoFocus id="phoneSearchTerm" onChange={(event) => handlePhoneSearchTerm(event.target.value)} label="Search phone or spec" variant="outlined" style={{ float: "left", "margin": "0 10px 5px 0" }} defaultValue={searchTerm} />
+         
+
+          {/* new */}
+          <Button variant="contained" color="success" style={{float: "right", height: "50px", width: "100px" }} onClick={newPhone}>New</Button>
+          
+          {/* table */}
           <Paper sx={{ width: "100%", overflow: "hidden" }}>
             <TableContainer sx={{ maxHeight: 440 }}>
               <Table stickyHeader aria-label="sticky table">
