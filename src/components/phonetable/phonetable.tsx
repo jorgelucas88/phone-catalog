@@ -12,6 +12,7 @@ import FormDialog from "../phoneform/PhoneForm";
 import { useConfirm } from "material-ui-confirm";
 import Loader from "react-loader-spinner";
 import { Button } from "@mui/material";
+import { apiHost } from "../../constants";
 
 interface Column {
   id: "name" | "manufacturer" | "color" | "price" | "screen";
@@ -86,7 +87,7 @@ export default function PhoneTable() {
   const fetchDataFromBackend = (page: number, pageSize: number) => {
     setLoading(true);
     axios
-      .get("http://localhost:3000/phones", {
+      .get(apiHost + "/phones", {
         params: { page: page, pageSize: pageSize },
       })
       .then((r) => {
@@ -110,7 +111,7 @@ export default function PhoneTable() {
       .then(() => {
         setLoading(true);
         setPhonePopupOpen(false);
-        axios.delete("http://localhost:3000/phones/" + phoneId).then((r) => {
+        axios.delete(apiHost + "/phones/" + phoneId).then((r) => {
           fetchDataFromBackend(0, rowsPerPage);
         });
       })
@@ -126,7 +127,7 @@ export default function PhoneTable() {
         setLoading(true);
         setPhonePopupOpen(false);
         axios
-          .patch("http://localhost:3000/phones", bodyFormData)
+          .patch(apiHost + "/phones", bodyFormData)
           .then((r) => {
             setLoading(false);
             fetchDataFromBackend(page, rowsPerPage);
@@ -153,7 +154,7 @@ export default function PhoneTable() {
         setPhonePopupOpen(false);
         
         axios
-          .post("http://localhost:3000/phones", bodyFormData)
+          .post(apiHost + "/phones", bodyFormData)
           .then((r) => {
             setLoading(false);
             fetchDataFromBackend(0, rowsPerPage);
@@ -180,7 +181,7 @@ export default function PhoneTable() {
       })
         .then(() => {
           axios
-            .delete("http://localhost:3000/phones/image/"+phone.id)
+            .delete(apiHost + "/phones/image/"+phone.id)
             .then((r) => {
               setLoading(false);
               setPhonePopupOpen(false);
