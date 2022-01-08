@@ -12,7 +12,9 @@ import FormDialog from "../phoneform/PhoneForm";
 import { useConfirm } from "material-ui-confirm";
 import Loader from "react-loader-spinner";
 import { Button } from "@mui/material";
-import { apiHost } from "../../constants";
+
+const apiHost: string = process.env.REACT_APP_API || "http://localhost:3000";
+axios.defaults.baseURL = apiHost;
 
 interface Column {
   id: "name" | "manufacturer" | "color" | "price" | "screen";
@@ -87,7 +89,7 @@ export default function PhoneTable() {
   const fetchDataFromBackend = (page: number, pageSize: number) => {
     setLoading(true);
     axios
-      .get(apiHost + "/phones", {
+      .get("/phones", {
         params: { page: page, pageSize: pageSize },
       })
       .then((r) => {

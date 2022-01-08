@@ -1,1 +1,0 @@
-export const apiHost: string = "https://phone-catalog-rs.herokuapp.com" || "http://localhost:3000";
