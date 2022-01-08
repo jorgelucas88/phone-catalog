@@ -1,1 +1,1 @@
-export const apiHost: string = process.env.API_HOST || "http://localhost:3000";
+export const apiHost: string = "https://phone-catalog-rs.herokuapp.com" || "http://localhost:3000";
