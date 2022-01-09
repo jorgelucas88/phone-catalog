@@ -232,7 +232,7 @@ export default function PhoneTable() {
       ) : (
         <div>
           {/* search */}
-          <TextField autoFocus id="phoneSearchTerm" onChange={(event) => handlePhoneSearchTerm(event.target.value)} label="Search phone or spec" variant="outlined" style={{ float: "left", "margin": "0 10px 5px 0" }} defaultValue={searchTerm} />
+          <TextField id="phoneSearchTerm" onChange={(event) => handlePhoneSearchTerm(event.target.value)} label="Search phone or spec" variant="outlined" style={{ float: "left", "margin": "0 10px 5px 0" }} defaultValue={searchTerm} />
          
 
           {/* new */}
